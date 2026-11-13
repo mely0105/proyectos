@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="excel-sheet">
+    <h4 class="mb-3 text-danger fw-bold">Punto de Ventas y Devoluciones</h4>
+
+    <!-- Mensajes de Django -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Formulario para Registrar Venta / Devolución -->
+    <div class="card mb-4 border-0 shadow-sm" style="background-color: #fff5f8; border-left: 5px solid #d81b60 !important;">
+        <div class="card-body">
+            <h6 class="fw-bold mb-3" style="color: #d81b60;">Registrar Movimiento de Venta</h6>
+            
+            <form action="{% url 'registrar_movimiento_vendedor' %}" method="POST">
+                {% csrf_token %}
+                
+                <div class="row g-3 align-items-end">
+                    <!-- ID del Producto -->
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">ID Producto</label>
+                        <div class="input-group">
+                            <input type="number" id="vendedor_id_producto" name="id_producto" class="form-control form-control-sm" placeholder="ID" required>
+                            <button type="button" class="btn btn-sm btn-excel" onclick="buscarProductoVenta()">Buscar</button>
+                        </div>
+                    </div>
+
+                    <!-- Tipo de Movimiento -->
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">Tipo Movimiento</label>
+                        <select name="tipo_movimiento" class="form-select form-select-sm" required>
+                            <option value="SALIDA">Venta (Salida)</option>
+                            <option value="AJUSTE">Devolución (Entrada)</option>
+                        </select>
+                    </div>
+
+                    <!-- Cantidad (Permite editar libremente) -->
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">Cantidad</label>
+                        <input type="number" name="cantidad" id="venta_cantidad" class="form-control form-control-sm" min="1" value="1" required oninput="calcularTotalVenta()">
+                    </div>
+
+                    <!-- Costo Total de la Compra -->
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold" style="color: #d81b60;">Costo Total ($)</label>
+                        <input type="text" id="costo_total" class="form-control form-control-sm fw-bold text-success" value="$0.00" readonly style="background-color: #e9ecef;">
+                    </div>
+
+                    <!-- Motivo -->
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">Motivo</label>
+                        <input type="text" name="motivo" class="form-control form-control-sm" placeholder="Opcional">
+                    </div>
+
+                    <!-- Botón Procesar -->
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-excel btn-sm w-100 py-2 fw-bold">Procesar Venta</button>
+                    </div>
+                </div>
+
+                <!-- Info rápida del producto buscado -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div id="info_producto_venta" class="p-2 rounded" style="background-color: #ffffff; border: 1px solid #f8bbd0; font-size: 0.9rem;">
+                            <span class="text-muted">Ingresa un ID o presiona <strong>Seleccionar</strong> en la tabla.</span>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de Productos -->
+    <h5 class="fw-bold mb-3" style="color: #37474f;">Inventario de Productos Disponibles</h5>
+    <div class="table-responsive">
+        <table class="table excel-table align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Código Barras</th>
+                    <th>Nombre Producto</th>
+                    <th>Categoría</th>
+                    <th>Stock Actual</th>
+                    <th>Precio Venta ($)</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prod in productos %}
+                <tr>
+                    <td class="text-center fw-bold">{{ prod.id_producto }}</td>
+                    <td class="text-center">{{ prod.codigo_barras|default:"-" }}</td>
+                    <td>{{ prod.nombre }}</td>
+                    <td class="text-center">{{ prod.id_categoria.nombre|default:"Sin categoría" }}</td>
+                    <td class="text-center fw-bold {% if prod.stock_actual <= prod.stock_minimo %}text-danger{% else %}text-success{% endif %}">
+                        {{ prod.stock_actual }}
+                    </td>
+                    <td class="excel-highlight-col">${{ prod.precio_venta }}</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="seleccionarProducto('{{ prod.id_producto }}', '{{ prod.nombre }}', '{{ prod.precio_venta }}', '{{ prod.stock_actual }}')">
+                            Seleccionar
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted">No hay productos registrados en el inventario.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- JAVASCRIPT DE CÁLCULO SIMPLE -->
+<script>
+let precioVentaUnitario = 0;
+
+function calcularTotalVenta() {
+    const cantidadInput = document.getElementById('venta_cantidad');
+    const cantidad = parseFloat(cantidadInput.value) || 0;
+    const total = cantidad * precioVentaUnitario;
+    
+    document.getElementById('costo_total').value = `$${total.toFixed(2)}`;
+}
+
+function buscarProductoVenta() {
+    const idProducto = document.getElementById('vendedor_id_producto').value;
+    const infoDiv = document.getElementById('info_producto_venta');
+
+    if (!idProducto) {
+        alert('Ingresa un ID de producto válido.');
+        return;
+    }
+
+    fetch(`/obtener_producto_json/${idProducto}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                precioVentaUnitario = parseFloat(data.precio_venta) || 0;
+                infoDiv.innerHTML = `<strong class="text-dark">Producto:</strong> ${data.nombre} | <strong class="text-dark">Precio Unitario:</strong> $${precioVentaUnitario.toFixed(2)} | <strong class="text-dark">Stock:</strong> <span class="badge bg-info text-dark">${data.stock_actual} pzas</span>`;
+                calcularTotalVenta();
+            } else {
+                precioVentaUnitario = 0;
+                document.getElementById('costo_total').value = "$0.00";
+                infoDiv.innerHTML = `<span class="text-danger fw-bold">Producto no encontrado con el ID ${idProducto}.</span>`;
+            }
+        })
+        .catch(error => {
+            console.error(error);
+        });
+}
+
+function seleccionarProducto(id, nombre, precio, stock) {
+    document.getElementById('vendedor_id_producto').value = id;
+    precioVentaUnitario = parseFloat(precio) || 0;
+    
+    document.getElementById('info_producto_venta').innerHTML = `<strong class="text-dark">Producto:</strong> ${nombre} | <strong class="text-dark">Precio Unitario:</strong> $${precioVentaUnitario.toFixed(2)} | <strong class="text-dark">Stock:</strong> <span class="badge bg-info text-dark">${stock} pzas</span>`;
+    
+    calcularTotalVenta();
+}
+</script>
+{% endblock %}

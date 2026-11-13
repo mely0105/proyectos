@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% if request.session.rol == 'administrador' %}
+            Dashboard
+        {% elif request.session.rol == 'almacenista' %}
+            Inventario
+        {% elif request.session.rol == 'vendedor' %}
+            Ventas
+        {% else %}
+            Sistema
+        {% endif %}
+    </title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --rosa-encabezado: #d81b60;
+            --rosa-suave: #f06292;
+            --rosa-pastell: #fce4ec;
+            --rosa-filas: #fff5f8;
+            --rosa-seleccion: #f8bbd0;
+            --excel-border: #e0e0e0;
+            --texto-oscuro: #37474f;
+        }
+
+        body {
+            background-color: #fafafa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--texto-oscuro);
+        }
+
+        .excel-header {
+            background-color: var(--rosa-encabezado);
+            color: white;
+            padding: 10px 24px;
+            border-bottom: 2px solid var(--rosa-suave);
+        }
+
+        .excel-header a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--rosa-encabezado);
+            font-weight: 600;
+            border: 1px solid var(--excel-border);
+            border-bottom: none;
+            background-color: #f5f5f5;
+            margin-right: 4px;
+            font-size: 0.9rem;
+        }
+
+        .nav-tabs .nav-link.active {
+            background-color: var(--rosa-encabezado) !important;
+            color: white !important;
+            border-color: var(--rosa-encabezado);
+        }
+
+        .excel-sheet {
+            background-color: #ffffff;
+            border: 1px solid var(--excel-border);
+            border-radius: 4px;
+            padding: 24px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+            margin-top: 15px;
+        }
+
+        .excel-table {
+            border-collapse: collapse !important;
+            width: 100%;
+            border: 1px solid var(--excel-border) !important;
+            font-size: 0.9rem;
+        }
+
+        .excel-table th {
+            background-color: var(--rosa-pastell) !important;
+            color: var(--rosa-encabezado) !important;
+            text-align: center;
+            vertical-align: middle;
+            border: 1px solid var(--rosa-seleccion) !important;
+            padding: 9px;
+            font-weight: 700;
+        }
+
+        .excel-table td {
+            border: 1px solid var(--excel-border) !important;
+            padding: 7px 12px;
+            vertical-align: middle;
+        }
+
+        .excel-table tbody tr:nth-child(even) {
+            background-color: var(--rosa-filas);
+        }
+
+        .excel-table tbody tr:hover {
+            background-color: #f48fb11f;
+        }
+
+        .excel-highlight-col {
+            background-color: #f8bbd04d !important;
+            font-weight: 600;
+            text-align: center;
+            color: var(--rosa-encabezado);
+        }
+
+        .btn-excel {
+            background-color: var(--rosa-suave);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+
+        .btn-excel:hover {
+            background-color: var(--rosa-encabezado);
+            color: white;
+        }
+
+        .btn-excel-danger {
+            background-color: #e57373;
+            color: white;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="excel-header d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <h5 class="m-0 me-3">
+                {% if request.session.rol == 'administrador' %}
+                    Dashboard
+                {% elif request.session.rol == 'almacenista' %}
+                    Inventario
+                {% elif request.session.rol == 'vendedor' %}
+                    Ventas
+                {% else %}
+                    Sistema
+                {% endif %}
+            </h5>
+            <span class="badge bg-light text-dark">Rol: {{ request.session.rol|default:"Invitado" }}</span>
+        </div>
+        <div>
+            {% if request.session.usuario_id %}
+                <span class="me-3">Usuario: {{ request.session.nom_user }}</span>
+                <a href="{% url 'logout' %}" class="btn btn-sm btn-outline-light">Cerrar Sesión</a>
+            {% else %}
+                <a href="{% url 'login' %}" class="btn btn-sm btn-light">Iniciar Sesión</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <div class="container-fluid px-4 py-3">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
