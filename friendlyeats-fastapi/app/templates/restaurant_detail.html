@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px; align-items: start;">
+        <img src="{{ restaurant.photoUrl if restaurant.photoUrl else 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500' }}" alt="{{ restaurant.name }}" style="width: 100%; height: 340px; object-fit: cover; border-radius: var(--radius); border: 1px solid var(--border);">
+        <div>
+            <span class="restaurant-badge">{{ restaurant.category }}</span>
+            <h1 style="font-family: 'Outfit', sans-serif; font-size: 2.2rem; font-weight: 800; margin-bottom: 8px;">{{ restaurant.name }}</h1>
+            <p class="restaurant-meta" style="font-size: 1rem; margin-bottom: 20px;">Ciudad: {{ restaurant.city }}</p>
+            
+            <div style="background-color: var(--bg-input); padding: 20px; border-radius: var(--radius-sm); margin-bottom: 24px; border: 1px solid var(--border);">
+                <p style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Rango de Precio</p>
+                <p class="restaurant-price" style="font-size: 1.3rem; padding-top: 0;">
+                    {% if restaurant.price == 1 %}
+                        $ (Económico)
+                    {% elif restaurant.price == 2 %}
+                        $$ (Moderado)
+                    {% else %}
+                        $$$ (Premium)
+                    {% endif %}
+                </p>
+            </div>
+
+            <p class="restaurant-meta" style="margin-bottom: 28px; font-size: 1rem;">
+                Calificación promedio: <strong style="color: var(--text-main);">{{ restaurant.avgRating }}</strong> ({{ restaurant.numRatings }} evaluaciones)
+            </p>
+
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <a href="/restaurants/{{ restaurant.id }}/edit" class="btn">Editar Restaurante</a>
+                <button type="button" onclick="deleteRestaurant('{{ restaurant.id }}')" class="btn btn-danger">Eliminar</button>
+                <a href="/" class="btn btn-secondary">Volver al listado</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

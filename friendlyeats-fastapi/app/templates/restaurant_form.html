@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card" style="max-width: 580px; margin: 0 auto;">
+    <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.8rem; margin-bottom: 24px;">
+        {{ "Editar" if restaurant else "Nuevo" }} Restaurante
+    </h2>
+
+    <form id="restaurant-form" data-id="{{ restaurant.id if restaurant else '' }}">
+        <div style="margin-bottom: 20px;">
+            <label for="name">Nombre</label>
+            <input type="text" id="name" name="name" required value="{{ restaurant.name if restaurant else '' }}">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label for="category">Categoría</label>
+            <input type="text" id="category" name="category" required value="{{ restaurant.category if restaurant else '' }}" placeholder="Ej. Mexicana, Italiana, Japonesa">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label for="city">Ciudad</label>
+            <input type="text" id="city" name="city" required value="{{ restaurant.city if restaurant else '' }}" placeholder="Ej. Puebla, CDMX, Guadalajara">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label for="price">Rango de Precio</label>
+            <select id="price" name="price" required>
+                <option value="1" {% if restaurant and restaurant.price == 1 %}selected{% endif %}>$ (Económico)</option>
+                <option value="2" {% if restaurant and restaurant.price == 2 %}selected{% endif %}>$$ (Moderado)</option>
+                <option value="3" {% if restaurant and restaurant.price == 3 %}selected{% endif %}>$$$ (Premium)</option>
+            </select>
+        </div>
+
+        <div style="margin-bottom: 28px;">
+            <label for="photoUrl">URL de Imagen</label>
+            <input type="url" id="photoUrl" name="photoUrl" value="{{ restaurant.photoUrl if restaurant else '' }}" placeholder="https://ejemplo.com/imagen.jpg">
+        </div>
+
+        <div style="display: flex; gap: 12px;">
+            <button type="submit" class="btn" style="flex: 1;">Guardar Restaurante</button>
+            <a href="/" class="btn btn-secondary" style="flex: 1;">Volver al listado</a>
+        </div>
+    </form>
+    <p id="message" style="margin-top: 20px; text-align: center; font-weight: 600;"></p>
+</div>
+{% endblock %}
